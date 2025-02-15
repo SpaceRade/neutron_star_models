@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Initial Newtonian polytrope script.
-Basic ODEs and Euler integration for one central pressure.
+Newtonian polytrope with Runge-Kutta integration.
+Single central pressure run.
 """
 import numpy as np
 import scipy.constants as con
 
-# Physical constants
+# Constants
 G = 6.67e-11
 K_NR = 2.98e-25
 A_POLY = 5/3
@@ -18,7 +18,7 @@ def f2(r, P, M):
     rho = (P / K_NR)**(1 / A_POLY) / con.c**2
     return 4 * np.pi * r**2 * rho
 
-def integrate_euler(P0, M0, r0, r_max, h):
+def runge_kutta(P0, M0, r0, r_max, h):
     r_values = np.arange(r0, r_max, h)
     P_values = np.zeros_like(r_values)
     M_values = np.zeros_like(r_values)
@@ -26,11 +26,22 @@ def integrate_euler(P0, M0, r0, r_max, h):
     M_values[0] = M0
 
     for i in range(1, len(r_values)):
-        P_values[i] = P_values[i-1] + h * f1(r_values[i-1], P_values[i-1], M_values[i-1])
-        M_values[i] = M_values[i-1] + h * f2(r_values[i-1], P_values[i-1], M_values[i-1])
+        r, P, M = r_values[i-1], P_values[i-1], M_values[i-1]
+
+        k1_P = h * f1(r, P, M)
+        k1_M = h * f2(r, P, M)
+        k2_P = h * f1(r + h/2, P + k1_P/2, M + k1_M/2)
+        k2_M = h * f2(r + h/2, P + k1_P/2, M + k1_M/2)
+        k3_P = h * f1(r + h/2, P + k2_P/2, M + k2_M/2)
+        k3_M = h * f2(r + h/2, P + k2_P/2, M + k2_M/2)
+        k4_P = h * f1(r + h, P + k3_P, M + k3_M)
+        k4_M = h * f2(r + h, P + k3_P, M + k3_M)
+
+        P_values[i] = P + (k1_P + 2*k2_P + 2*k3_P + k4_P)/6
+        M_values[i] = M + (k1_M + 2*k2_M + 2*k3_M + k4_M)/6
 
     return r_values, P_values, M_values
 
 if __name__ == "__main__":
-    r, P, M = integrate_euler(1e34, 0, 1, 1e6, 100)
+    r, P, M = runge_kutta(1e34, 0, 1, 1e6, 100)
     print("Final mass:", M[-1])
