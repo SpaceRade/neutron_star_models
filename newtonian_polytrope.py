@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Newtonian polytrope: simulation loop for multiple central pressures.
+Newtonian polytrope: add Matplotlib plots.
 """
 import numpy as np
+import matplotlib.pyplot as plt
 import scipy.constants as con
 
 # Constants
@@ -55,7 +56,18 @@ def run_simulation():
 
     return central_pressures, final_radii, final_masses
 
+def plot_results(cp, radii, masses):
+    fig, ax1 = plt.subplots()
+    ax1.set_xscale("log")
+    ax1.plot(cp, radii, '--k', label='Radius')
+    ax1.set_xlabel("Central Pressure (Pa)")
+    ax1.set_ylabel("Radius (km)")
+    ax2 = ax1.twinx()
+    ax2.plot(cp, masses, '-k', label='Mass')
+    ax2.set_ylabel("Mass (Msun)")
+    fig.tight_layout()
+    plt.show()
+
 if __name__ == "__main__":
     cp, radii, masses = run_simulation()
-    for p, r, m in zip(cp, radii, masses):
-        print(f"P={p:.2e}, R={r:.2f} km, M={m:.2f} Msun")
+    plot_results(cp, radii, masses)
