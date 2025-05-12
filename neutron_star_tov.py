@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-TOV Neutron Star Model - Run simulation and save data
+TOV Neutron Star Model - Final version with plotting
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 
 G = 6.67430e-11
@@ -53,14 +54,25 @@ def run_simulation():
         )
         final_masses.append(sol.y[1][-1]/M_SUN)
         final_radii.append(sol.t[-1]/1e3)
-    with open('neutron_star_data.txt','w') as f:
-        f.write("Pressure\tMass\tRadius\n")
-        for p,m,r in zip(central_pressures,final_masses,final_radii):
-            f.write(f"{p}\t{m}\t{r}\n")
+    np.savetxt('neutron_star_data.txt',
+               np.column_stack((central_pressures,final_masses,final_radii)),
+               header="Pressure\tMass\tRadius")
     print("Data saved.")
+    return central_pressures, final_masses, final_radii
+
+def plot_results(pressures, masses, radii):
+    plt.figure(figsize=(8,6))
+    plt.plot(radii, masses,'o-')
+    plt.xlabel("Radius [km]")
+    plt.ylabel("Mass [Solar Masses]")
+    plt.title("Neutron Star Mass-Radius Relation (TOV)")
+    plt.grid(True)
+    plt.savefig("mass_radius_curve.png")
+    plt.show()
 
 def main():
-    run_simulation()
+    p,m,r = run_simulation()
+    plot_results(p,m,r)
 
 if __name__ == "__main__":
     main()
